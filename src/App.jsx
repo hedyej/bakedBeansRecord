@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Button, Typography, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper ,ButtonGroup} from '@mui/material';
 import Emoji from 'react-emojis';
@@ -16,39 +16,55 @@ const App = () => {
   const [airValve, setAirValve] = useState('');
   const [powerLevel, setPowerLevel] = useState('');
   const [phaseRecord, setPhaseRecord] = useState({ 回溫點: '', 爆點: '', 出鍋點: '' });
-  const [intervalId, setIntervalId] = useState(null);
-
+  const [startTime, setStartTime] = useState(null);
   const phases = ["回溫點", "爆點", "出鍋點"];
   const [currentPhase, setCurrentPhase] = useState(phases[0]);
     const [selectedPhase, setSelectedPhase] = useState('豆溫');
-  
+    const beanTempInputRef = useRef(null);
+  const focusOnBeanTempInput = () => {
+      beanTempInputRef.current.focus();
+  };
 
   useEffect(() => {
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [intervalId]);
-
-  const handleStart = () => {
-    setIsStarted(true);
-    setIsFinished(false);
-    setRecords([]);
-    setTime(0);
-    const id = setInterval(() => {
-      setTime(prevTime => prevTime + 1);
-    }, 1000);
-    setIntervalId(id);
-  };
-
-  const handleStop = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
+    if (isStarted && beanTempInputRef.current) {
+      beanTempInputRef.current.focus();
     }
-    setIsStarted(false);
-    setIsFinished(true);
-  };
+  }, [isStarted]); 
+  
+
+    useEffect(() => {
+      let animationFrameId;
+    
+      if (isStarted && !isFinished) {
+        const updateTime = () => {
+          setTime(Math.floor((Date.now() - startTime) / 1000));
+          animationFrameId = requestAnimationFrame(updateTime);
+        };
+        animationFrameId = requestAnimationFrame(updateTime);
+      }
+    
+      return () => {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+      };
+    }, [isStarted, isFinished, startTime]);
+    
+    const handleStart = () => {
+      setIsStarted(true);
+      setIsFinished(false);
+      setRecords([]);
+      setStartTime(Date.now());
+      setTime(0);
+      focusOnBeanTempInput();
+    };
+    
+    const handleStop = () => {
+      setIsStarted(false);
+      setIsFinished(true);
+    };
+    
+    // ... existing code ...
 
   const handleBeanTempSubmit = (e) => {
     e.preventDefault();
@@ -71,6 +87,7 @@ const App = () => {
 
       const nextPhaseIndex = phases.indexOf(currentPhase) + 1;
       setCurrentPhase(nextPhaseIndex < phases.length ? phases[nextPhaseIndex] : phases[0]);
+      focusOnBeanTempInput();
     }
   };
 
@@ -94,17 +111,12 @@ const App = () => {
   };
   
 return (
-  <div style={{
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    width: '100vw',
-    padding: '24px 0',
-  }}>
+  <div style={{display: 'flex', flexDirection: 'column',alignItems:"center"}} >
     <Emoji emoji="hot-beverage" size="100" />
-    <Typography variant="h3" style={{ marginTop: 24, marginBottom: 24 }}>
+    <Typography variant="h4" style={{ marginTop: 24, marginBottom: 24 }}>
       烘豆溫度追蹤
     </Typography>
+
 
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '400px',      backgroundColor: '#FAFAFA', }}>
       {!isStarted && !isFinished && (
@@ -144,7 +156,7 @@ return (
 
       {isStarted && (
         <>
-          <Typography variant="h4" align="center">
+          <Typography variant="h2" align="center" fontWeight={500}>
             {formatTime(time)}
           </Typography>
           <ButtonGroup variant="outlined" aria-label="Basic button group" style={{ marginBottom: '16px', width: '100%' }}>
@@ -183,6 +195,7 @@ return (
           </ButtonGroup>
           <form onSubmit={handleBeanTempSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <TextField
+              inputRef={beanTempInputRef}
               label={`${selectedPhase} (°C)`}
               type="number"
               value={beanTemp}
@@ -203,7 +216,7 @@ return (
               onChange={(e) => setPowerLevel(e.target.value)}
               fullWidth
             />
-            <Button type="submit" variant="outlined" fullWidth size="large"> {/* 設置按鈕大小 */}
+            <Button type="submit" variant="outlined" fullWidth size="large" onClick={focusOnBeanTempInput}> {/* 設置按鈕大小 */}
               紀錄
             </Button>
           </form>
@@ -282,41 +295,55 @@ return (
         </TableContainer>
       </div>
     )}
-    {isFinished && records.length > 0 && (
-      <div style={{ width: '100%', marginTop: '20px', maxWidth: '400px', padding: '24px 0', }}>
-        <Typography variant="h6" align="center">烘豆溫度曲線</Typography>
-        <div style={{ height: '240px', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px' }}>
-          <LineChart
-            width={900}
-            height={240}
-            data={records}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="time" 
-              tickFormatter={formatTime}
-              label={{ value: '時間', position: 'insideBottom', offset: -5 }}
-            />
-            <YAxis 
-              label={{ value: '豆溫 (°C)', angle: -90, position: 'insideLeft' }}
-            />
-            <Tooltip 
-              labelFormatter={formatTime}
-              formatter={(value) => [`${value}°C`, '豆溫']}
-            />
-            <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="temperature" 
-              stroke="#6F4C3E" 
-              name="豆溫"
-              dot={{ r: 6 }}
-            />
-          </LineChart>
-        </div>
+{isFinished && records.length > 0 && (
+  <div style={{ width: '100%', marginTop: '20px', maxWidth: '400px', padding: '24px 0' }}>
+    <Typography variant="h6" align="center">烘豆溫度曲線</Typography>
+    <Paper 
+      style={{ 
+        height: '240px', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        marginTop: '20px', 
+        overflowX: 'auto', // Enable horizontal scroll
+        width: '100%',
+        maxWidth: '400px',
+      }}
+    >
+      <div style={{ width: '900px' }}> {/* Inner div to keep chart width */}
+        <LineChart
+          width={900}
+          height={240}
+          data={records}
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis 
+            dataKey="time" 
+            tickFormatter={formatTime}
+            label={{ value: '時間', position: 'insideBottom', offset: -5 }}
+          />
+          <YAxis 
+            label={{ value: '豆溫 (°C)', angle: -90, position: 'insideLeft' }}
+          />
+          <Tooltip 
+            labelFormatter={formatTime}
+            formatter={(value) => [`${value}°C`, '豆溫']}
+          />
+          <Legend />
+          <Line 
+            type="monotone" 
+            dataKey="temperature" 
+            stroke="#6F4C3E" 
+            name="豆溫"
+            dot={{ r: 6 }}
+          />
+        </LineChart>
       </div>
-    )}
+    </Paper>
+  </div>
+)}
+
   </div>
 );
   

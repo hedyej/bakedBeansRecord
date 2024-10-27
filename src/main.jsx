@@ -18,11 +18,8 @@ const theme = createTheme({
 createRoot(document.getElementById('root')).render(
   <StrictMode>
   <ThemeProvider theme={theme}>
-    <div style={{
-      backgroundColor: '#FAFAFA',
-    }}>
+    
       <App />
-    </div>
   </ThemeProvider>
   </StrictMode>,
 )
