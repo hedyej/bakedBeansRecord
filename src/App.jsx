@@ -100,7 +100,7 @@ const App = () => {
     setEntryTemp('');
     setRecords([]);
     setTime(0);
-    setPhaseRecord({ 回溫點: '', 爆點: '', 出鍋點: '' });
+    setPhaseRecord({ 回溫: '', 爆點: '', 出鍋: '' });
     setCurrentPhase(phases[0]);
   };
 
