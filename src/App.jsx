@@ -15,9 +15,9 @@ const App = () => {
   const [records, setRecords] = useState([]);
   const [airValve, setAirValve] = useState('');
   const [powerLevel, setPowerLevel] = useState('');
-  const [phaseRecord, setPhaseRecord] = useState({ 回溫點: '', 爆點: '', 出鍋點: '' });
+  const [phaseRecord, setPhaseRecord] = useState({ 回溫: '', 爆點: '', 出鍋: '' });
   const [startTime, setStartTime] = useState(null);
-  const phases = ["回溫點", "爆點", "出鍋點"];
+  const phases = ["回溫", "爆點", "出鍋"];
   const [currentPhase, setCurrentPhase] = useState(phases[0]);
     const [selectedPhase, setSelectedPhase] = useState('豆溫');
     const beanTempInputRef = useRef(null);
@@ -169,12 +169,12 @@ return (
               豆溫
             </Button>
             <Button 
-              onClick={() => setSelectedPhase('回溫點')}
-              variant={selectedPhase === '回溫點' ? 'contained' : 'outlined'}
+              onClick={() => setSelectedPhase('回溫')}
+              variant={selectedPhase === '回溫' ? 'contained' : 'outlined'}
               size="large" // 設置按鈕大小
               fullWidth // 使按鈕全寬
             >
-              回溫點
+              回溫
             </Button>
             <Button 
               onClick={() => setSelectedPhase('爆點')}
@@ -185,12 +185,12 @@ return (
               爆點
             </Button>
             <Button 
-              onClick={() => setSelectedPhase('出鍋點')}
-              variant={selectedPhase === '出鍋點' ? 'contained' : 'outlined'}
+              onClick={() => setSelectedPhase('出鍋')}
+              variant={selectedPhase === '出鍋' ? 'contained' : 'outlined'}
               size="large" // 設置按鈕大小
               fullWidth // 使按鈕全寬
             >
-              出鍋點
+              出鍋
             </Button>
           </ButtonGroup>
           <form onSubmit={handleBeanTempSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -256,16 +256,16 @@ return (
                 <TableCell>{entryTemp}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>回溫點 (°C)</TableCell>
-                <TableCell>{phaseRecord.回溫點}°C</TableCell>
+                <TableCell>回溫 (°C)</TableCell>
+                <TableCell>{phaseRecord.回溫}°C</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>爆點 (°C)</TableCell>
                 <TableCell>{phaseRecord.爆點}°C</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>出鍋點 (°C)</TableCell>
-                <TableCell>{phaseRecord.出鍋點}°C</TableCell>
+                <TableCell>出鍋 (°C)</TableCell>
+                <TableCell>{phaseRecord.出鍋}°C</TableCell>
               </TableRow>
             </TableBody>
           </Table>
